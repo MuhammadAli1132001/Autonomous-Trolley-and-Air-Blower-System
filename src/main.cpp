@@ -5,7 +5,7 @@ I have used BTS7960 for motors controlling in term of forward/reverse direction,
 pulse width modulation(PWM) is programmatically configured for variable motor speeds. A reset push buton ensures restarting of the whole process.*/
 
 #include <Arduino.h>
-
+#define RPM 125
 #define Push_Enable 11
 #define Limit_switchA 2
 #define Limit_switchB 3
@@ -80,7 +80,7 @@ void loop()
   }
 
   Started();
-  Serial.print("state ");
+  Serial.print("In state ");
   Serial.println(state);
   delay(10);
 }
@@ -89,7 +89,7 @@ void Started()
 {
   if (!digitalRead(Push_Enable))
   {
-    Serial.println("Enabled is Pressed");
+    Serial.println("Enabled button is Pressed");
     state = 1;
     digitalWrite(Push_Enable, HIGH);
     delay(20);
@@ -124,15 +124,17 @@ void SwitchB_control()                                 // ISR for limit B pressi
   Serial.println("exhaust fan ruining");
   delay(300);
 
-  while (delays <= 5000)                               // moving M2 with full speed in opposite direction for Exhaust, upto 10 seconds
+  while (delays != 5000)                               // moving M2 with full speed in opposite direction for Exhaust, upto 10 seconds
   {
     analogWrite(M2_L_Pwm, 0);
     analogWrite(M2_R_Pwm, 255);
-    delay(20);
+    delay(10);
     delays = delays + 1;
     Serial.println(delays);
   }
-  delay(5000);
+  analogWrite(M2_L_Pwm, 0);
+  analogWrite(M2_R_Pwm, 0);
+  delay(20000);
   initialStart = false;
   state = 2;
 }
@@ -154,7 +156,7 @@ void Move_forward()                                    // moving the trolley for
 {
   if (!initialStart)
   {
-    for (int i = 0; i <= 150; i++)
+    for (int i = 0; i <= 125; i++)
     {
       analogWrite(M1_R_Pwm, 0);
       analogWrite(M1_L_Pwm, i);
@@ -167,8 +169,8 @@ void Move_forward()                                    // moving the trolley for
 
   else
   {
-    analogWrite(M2_L_Pwm, 125);
-    analogWrite(M1_L_Pwm, 125);
+    analogWrite(M2_L_Pwm, RPM);
+    analogWrite(M1_L_Pwm, RPM);
   }
 }
 
@@ -190,8 +192,8 @@ void Move_reverse()                              // moving the trolley in revers
 
   else
   {
-    analogWrite(M1_R_Pwm, 125);
-    analogWrite(M2_R_Pwm, 125);
+    analogWrite(M1_R_Pwm, RPM);
+    analogWrite(M2_R_Pwm, RPM);
   }
 }
 

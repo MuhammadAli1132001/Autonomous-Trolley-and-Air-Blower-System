@@ -132,9 +132,10 @@ void SwitchB_control()                                 // ISR for limit B pressi
     delays = delays + 1;
     Serial.println(delays);
   }
+  delay(1000);
   analogWrite(M2_L_Pwm, 0);
   analogWrite(M2_R_Pwm, 0);
-  delay(20000);
+  delay(10000);
   initialStart = false;
   state = 2;
 }

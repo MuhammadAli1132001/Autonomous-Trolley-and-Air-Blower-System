@@ -21,6 +21,7 @@ int R_EN = 11;
 int L_EN = 12;
 
 bool initialStart = false;
+bool ReturnAfterExhaust = false;
 uint8_t state = 0;
 uint8_t i = 0;
 
@@ -131,24 +132,38 @@ void SwitchB_control()                                 // ISR for limit B pressi
     delay(10);
     delays = delays + 1;
     Serial.println(delays);
+    ReturnAfterExhaust = true;
   }
-  delay(1000);
-  analogWrite(M2_L_Pwm, 0);
-  analogWrite(M2_R_Pwm, 0);
-  delay(10000);
-  initialStart = false;
-  state = 2;
+  Stop();                                            // default and after reverse direction state
+
+  // delay(1000);
+  // analogWrite(M1_L_Pwm, 0);
+  // analogWrite(M1_R_Pwm, 0);
+  // analogWrite(M2_L_Pwm, 0);
+  // analogWrite(M2_R_Pwm, 0);
+  // delay(10000);
+  // initialStart = false;
+  // state = 2;
 }
 
 void Stop()                                              // default and after reverse direction state
 {
+  if (ReturnAfterExhaust)
+  { 
+    delay(10000);
+    initialStart = false;
+    state = 2;
+  }
 
-  Serial.println("the trolley is currently stoped");
-  analogWrite(M1_L_Pwm, 0);
-  analogWrite(M1_R_Pwm, 0);
-  analogWrite(M2_L_Pwm, 0);
-  analogWrite(M2_R_Pwm, 0);
-
+  else
+  {
+    Serial.println("the trolley is currently stoped");
+    analogWrite(M1_L_Pwm, 0);
+    analogWrite(M1_R_Pwm, 0);
+    analogWrite(M2_L_Pwm, 0);
+    analogWrite(M2_R_Pwm, 0);
+  }
+  ReturnAfterExhaust = false;
   delay(500);
   // state = 1;
 }

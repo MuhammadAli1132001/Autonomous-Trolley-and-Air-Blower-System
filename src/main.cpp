@@ -97,7 +97,7 @@ void Started()
   }
 }
 
-void SwitchA_control()                               // ISR for limit A pressed
+void SwitchA_control() // ISR for limit A pressed
 {
 
   Serial.println("limit switch A Pressed");
@@ -110,7 +110,7 @@ void SwitchA_control()                               // ISR for limit A pressed
   state = 0;
 }
 
-void SwitchB_control()                                 // ISR for limit B pressing
+void SwitchB_control() // ISR for limit B pressing
 {
   int delays = 0;
 
@@ -125,7 +125,7 @@ void SwitchB_control()                                 // ISR for limit B pressi
   Serial.println("exhaust fan ruining");
   delay(300);
 
-  while (delays != 5000)                               // moving M2 with full speed in opposite direction for Exhaust, upto 10 seconds
+  while (delays != 5000) // moving M2 with full speed in opposite direction for Exhaust, upto 10 seconds
   {
     analogWrite(M2_L_Pwm, 0);
     analogWrite(M2_R_Pwm, 255);
@@ -134,45 +134,41 @@ void SwitchB_control()                                 // ISR for limit B pressi
     Serial.println(delays);
     ReturnAfterExhaust = true;
   }
-  Stop();                                            // default and after reverse direction state
-
   // delay(1000);
   // analogWrite(M1_L_Pwm, 0);
   // analogWrite(M1_R_Pwm, 0);
   // analogWrite(M2_L_Pwm, 0);
   // analogWrite(M2_R_Pwm, 0);
   // delay(10000);
-  // initialStart = false;
-  // state = 2;
+  initialStart = false;
+  state = 2;
 }
 
-void Stop()                                              // default and after reverse direction state
+void Stop() // default and after reverse direction state
 {
-  if (ReturnAfterExhaust)
-  { 
-    delay(10000);
-    initialStart = false;
-    state = 2;
-  }
+  // if (ReturnAfterExhaust)
+  // {
+  //   delay(10000);
+  //   initialStart = false;
+  //   state = 2;
+  // }
 
-  else
-  {
-    Serial.println("the trolley is currently stoped");
-    analogWrite(M1_L_Pwm, 0);
-    analogWrite(M1_R_Pwm, 0);
-    analogWrite(M2_L_Pwm, 0);
-    analogWrite(M2_R_Pwm, 0);
-  }
+
+  Serial.println("the trolley is currently stoped");
+  analogWrite(M1_L_Pwm, 0);
+  analogWrite(M1_R_Pwm, 0);
+  analogWrite(M2_L_Pwm, 0);
+  analogWrite(M2_R_Pwm, 0);
   ReturnAfterExhaust = false;
   delay(500);
   // state = 1;
 }
 
-void Move_forward()                                    // moving the trolley forward with air blower as well
+void Move_forward() // moving the trolley forward with air blower as well
 {
   if (!initialStart)
   {
-    for (int i = 0; i <= 125; i++)
+    for (int i = 0; i <= 120; i++)
     {
       analogWrite(M1_R_Pwm, 0);
       analogWrite(M1_L_Pwm, i);
@@ -190,26 +186,40 @@ void Move_forward()                                    // moving the trolley for
   }
 }
 
-void Move_reverse()                              // moving the trolley in reverse direction with air blower
+void Move_reverse() // moving the trolley in reverse direction with air blower
 {
-  if (!initialStart)
-
+  if (ReturnAfterExhaust)
   {
-    for (int i = 0; i <= 125; i++)
-    {
-      analogWrite(M1_R_Pwm, i);
-      analogWrite(M1_L_Pwm, 0);
-      analogWrite(M2_R_Pwm, i);
-      analogWrite(M2_L_Pwm, 0);
-      delay(20);
-    }
-    initialStart = true;
+    Serial.println("Stopped after exhaust upto 4 second");
+    analogWrite(M2_L_Pwm, 0);
+    analogWrite(M2_R_Pwm, 0);
+    delay(5000);
+    ReturnAfterExhaust = false;
+    initialStart = false;
+    state = 2;
   }
 
   else
   {
-    analogWrite(M1_R_Pwm, RPM);
-    analogWrite(M2_R_Pwm, RPM);
+
+    if (!initialStart)
+    {
+      for (int i = 0; i <= 125; i++)
+      {
+        analogWrite(M1_R_Pwm, i);
+        analogWrite(M1_L_Pwm, 0);
+        analogWrite(M2_R_Pwm, i);
+        analogWrite(M2_L_Pwm, 0);
+        delay(20);
+      }
+      initialStart = true;
+    }
+
+    else
+    {
+      analogWrite(M1_R_Pwm, RPM);
+      analogWrite(M2_R_Pwm, RPM);
+    }
   }
 }
 

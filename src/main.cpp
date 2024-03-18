@@ -5,7 +5,9 @@ I have used BTS7960 for motors controlling in term of forward/reverse direction,
 pulse width modulation(PWM) is programmatically configured for variable motor speeds. A reset push buton ensures restarting of the whole process.*/
 
 #include <Arduino.h>
-#define RPM 125
+#define MoverMotorRPM 120
+#define FanExhaustMotorRPM 200
+
 #define Push_Enable 11
 #define Limit_switchA 2
 #define Limit_switchB 3
@@ -22,6 +24,7 @@ int L_EN = 12;
 
 bool initialStart = false;
 bool ReturnAfterExhaust = false;
+bool ExhaustStart = false;
 uint8_t state = 0;
 uint8_t i = 0;
 
@@ -29,6 +32,7 @@ void Started(void);
 void Move_forward(void);
 void Move_reverse(void);
 void Stop();
+void DoExhaust(void);
 void SwitchA_control();
 void SwitchB_control();
 
@@ -88,7 +92,7 @@ void loop()
 
 void Started()
 {
-  if (!digitalRead(Push_Enable))
+  if (!digitalRead(Push_Enable) && state == 0)
   {
     Serial.println("Enabled button is Pressed");
     state = 1;
@@ -112,47 +116,22 @@ void SwitchA_control() // ISR for limit A pressed
 
 void SwitchB_control() // ISR for limit B pressing
 {
-  int delays = 0;
-
   Serial.println("limit switch B Pressed");
 
   analogWrite(M1_R_Pwm, 0);
   analogWrite(M1_L_Pwm, 0);
   analogWrite(M2_R_Pwm, 0);
   analogWrite(M2_L_Pwm, 0);
-  delay(1000);
+  delay(100);
 
-  Serial.println("exhaust fan ruining");
-  delay(300);
-
-  while (delays != 5000) // moving M2 with full speed in opposite direction for Exhaust, upto 10 seconds
-  {
-    analogWrite(M2_L_Pwm, 0);
-    analogWrite(M2_R_Pwm, 255);
-    delay(10);
-    delays = delays + 1;
-    Serial.println(delays);
-    ReturnAfterExhaust = true;
-  }
-  // delay(1000);
-  // analogWrite(M1_L_Pwm, 0);
-  // analogWrite(M1_R_Pwm, 0);
-  // analogWrite(M2_L_Pwm, 0);
-  // analogWrite(M2_R_Pwm, 0);
-  // delay(10000);
+  ExhaustStart = true;
+  ReturnAfterExhaust = true;
   initialStart = false;
   state = 2;
 }
 
 void Stop() // default and after reverse direction state
 {
-  // if (ReturnAfterExhaust)
-  // {
-  //   delay(10000);
-  //   initialStart = false;
-  //   state = 2;
-  // }
-
 
   Serial.println("the trolley is currently stoped");
   analogWrite(M1_L_Pwm, 0);
@@ -164,11 +143,27 @@ void Stop() // default and after reverse direction state
   // state = 1;
 }
 
+void DoExhaust()
+{
+  int delays = 0;
+
+  while (delays != 1000) // moving M2 with full speed in opposite direction for Exhaust, upto 10 seconds
+  {
+    analogWrite(M2_L_Pwm, 0);
+    analogWrite(M2_R_Pwm, FanExhaustMotorRPM);
+    delay(10);
+    delays = delays + 1;
+    Serial.println(delays);
+  }
+  ReturnAfterExhaust = false;
+}
+
 void Move_forward() // moving the trolley forward with air blower as well
 {
+
   if (!initialStart)
   {
-    for (int i = 0; i <= 120; i++)
+    for (int i = 0; i <= MoverMotorRPM; i++)
     {
       analogWrite(M1_R_Pwm, 0);
       analogWrite(M1_L_Pwm, i);
@@ -181,18 +176,34 @@ void Move_forward() // moving the trolley forward with air blower as well
 
   else
   {
-    analogWrite(M2_L_Pwm, RPM);
-    analogWrite(M1_L_Pwm, RPM);
+    analogWrite(M2_L_Pwm, MoverMotorRPM);
+    analogWrite(M1_L_Pwm, MoverMotorRPM);
   }
 }
+
 
 void Move_reverse() // moving the trolley in reverse direction with air blower
 {
   if (ReturnAfterExhaust)
   {
-    Serial.println("Stopped after exhaust upto 4 second");
+    delay(5000);
+    Serial.println("exhaust fan ruining");
+    DoExhaust();
+    Serial.println("Stopping after exhaust upto 5 second");
+    // analogWrite(M2_R_Pwm, 100);
+    // analogWrite(M2_L_Pwm, 0);
+    // delay(1000);
+    analogWrite(M2_R_Pwm, 50);
     analogWrite(M2_L_Pwm, 0);
+    delay(1000);
+    analogWrite(M2_R_Pwm, 20);
+    analogWrite(M2_L_Pwm, 0);
+    delay(1000);
+    analogWrite(M2_R_Pwm, 10);
+    analogWrite(M2_L_Pwm, 0);
+    delay(1000);
     analogWrite(M2_R_Pwm, 0);
+    analogWrite(M2_L_Pwm, 0);
     delay(5000);
     ReturnAfterExhaust = false;
     initialStart = false;
@@ -204,7 +215,7 @@ void Move_reverse() // moving the trolley in reverse direction with air blower
 
     if (!initialStart)
     {
-      for (int i = 0; i <= 125; i++)
+      for (int i = 0; i <= MoverMotorRPM; i++)
       {
         analogWrite(M1_R_Pwm, i);
         analogWrite(M1_L_Pwm, 0);
@@ -217,8 +228,8 @@ void Move_reverse() // moving the trolley in reverse direction with air blower
 
     else
     {
-      analogWrite(M1_R_Pwm, RPM);
-      analogWrite(M2_R_Pwm, RPM);
+      analogWrite(M1_R_Pwm, MoverMotorRPM);
+      analogWrite(M2_R_Pwm, MoverMotorRPM);
     }
   }
 }

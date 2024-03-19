@@ -5,8 +5,8 @@ I have used BTS7960 for motors controlling in term of forward/reverse direction,
 pulse width modulation(PWM) is programmatically configured for variable motor speeds. A reset push buton ensures restarting of the whole process.*/
 
 #include <Arduino.h>
-#define MoverMotorRPM 120
-#define FanExhaustMotorRPM 200
+#define MoverMotorRPM 120                    //Mover motor M1 RPM
+#define FanExhaustMotorRPM 200              // Fan / Exhaust motor M2 RPM
 
 #define Push_Enable 11
 #define Limit_switchA 2

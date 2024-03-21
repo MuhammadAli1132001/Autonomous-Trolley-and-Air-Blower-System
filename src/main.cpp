@@ -5,22 +5,32 @@ I have used BTS7960 for motors controlling in term of forward/reverse direction,
 pulse width modulation(PWM) is programmatically configured for variable motor speeds. A reset push buton ensures restarting of the whole process.*/
 
 #include <Arduino.h>
-#define MoverMotorRPM 120                    //Mover motor M1 RPM
-#define FanExhaustMotorRPM 200              // Fan / Exhaust motor M2 RPM
+#include <LiquidCrystal.h>
 
 #define Push_Enable 11
 #define Limit_switchA 2
 #define Limit_switchB 3
+#define RotatarySwitch 4
+#define RotataryA 7
+#define RotataryB 8
+
+int MoverMotorRPM = 0;                   //Mover motor M1 RPM
+int FanExhaustMotorRPM = 0;             // Fan / Exhaust motor M2 RPM
+
+int RotataryState, alaststate, astate, bstate;
+
+int rs = A0, e = A1, d1 = A2, d2 = A3, d3 = A4, d4 = A5;
+LiquidCrystal lcd(rs, e, d4, d3, d2, d1);
 
 int M1_R_Pwm = 5;
 int M1_L_Pwm = 6;
 int M2_R_Pwm = 10;
 int M2_L_Pwm = 9;
 
-int R_IS = 8;
-int L_IS = 7;
-int R_EN = 11;
-int L_EN = 12;
+// int R_IS = 8;
+// int L_IS = 7;
+// int R_EN = 11;
+// int L_EN = 12;
 
 bool initialStart = false;
 bool ReturnAfterExhaust = false;
@@ -29,6 +39,7 @@ uint8_t state = 0;
 uint8_t i = 0;
 
 void Started(void);
+void ShowRpmOnLcd(void);
 void Move_forward(void);
 void Move_reverse(void);
 void Stop();
@@ -42,58 +53,79 @@ void setup()
   pinMode(Push_Enable, INPUT);
   pinMode(Limit_switchA, INPUT);
   pinMode(Limit_switchB, INPUT);
+  pinMode(RotataryA, INPUT);
+  pinMode(RotataryB, INPUT);
 
   Serial.begin(115200);
+  lcd.begin(16,2);
+  lcd.setCursor(0,0);
+  lcd.print("Assalamolaikom");
 
   pinMode(M1_R_Pwm, OUTPUT);
   pinMode(M1_L_Pwm, OUTPUT);
   pinMode(M2_R_Pwm, OUTPUT);
   pinMode(M2_L_Pwm, OUTPUT);
 
-  pinMode(R_IS, OUTPUT);
-  pinMode(L_IS, OUTPUT);
-  pinMode(R_EN, OUTPUT);
-  pinMode(L_EN, OUTPUT);
+  alaststate = digitalRead(RotataryA);
+  // pinMode(R_IS, OUTPUT);
+  // pinMode(L_IS, OUTPUT);
+  // pinMode(R_EN, OUTPUT);
+  // pinMode(L_EN, OUTPUT);
 
-  digitalWrite(R_EN, HIGH);
-  digitalWrite(L_EN, HIGH);
-  digitalWrite(R_IS, LOW);
-  digitalWrite(L_IS, LOW);
+  // digitalWrite(R_EN, HIGH);
+  // digitalWrite(L_EN, HIGH);
+  // digitalWrite(R_IS, LOW);
+  // digitalWrite(L_IS, LOW);
 
   attachInterrupt(digitalPinToInterrupt(Limit_switchA), SwitchA_control, RISING); // switch A ext interrupt
   attachInterrupt(digitalPinToInterrupt(Limit_switchB), SwitchB_control, RISING); // switch B ext interrupt
 
-  delay(100);
+  delay(1000);
+  lcd.clear();
+
 }
 
 void loop()
 {
-
-  switch (state)
+  if (digitalRead(RotatarySwitch))
   {
-  case 1:
-    Move_forward();
-    break;
-
-  case 2:
-    Move_reverse();
-    break;
-
-  default:
-    Stop();
-    break;
+    delay(10);
+    Serial.println("Rotatory switch");
+    RotataryState ++;
+    if (RotataryState > 2)
+    {
+      RotataryState = 0;
+    }
   }
+  RotataryConfiguration();
+  // switch (state)
+  // {
+  // case 1:
+  //   Move_forward();
+  //   break;
 
-  Started();
-  Serial.print("In state ");
-  Serial.println(state);
-  delay(10);
+  // case 2:
+  //   Move_reverse();
+  //   break;
+
+  // default:
+  //   Stop();
+  //   break;
+  // }
+
+  // Started();
+  // Serial.print("In state ");
+  // Serial.println(state);
+  ShowRpmOnLcd();
 }
+
 
 void Started()
 {
   if (!digitalRead(Push_Enable) && state == 0)
   {
+    MoverMotorRPM = 120;
+    FanExhaustMotorRPM = 200;
     Serial.println("Enabled button is Pressed");
     state = 1;
     digitalWrite(Push_Enable, HIGH);
@@ -101,6 +133,62 @@ void Started()
   }
 }
 
+void RotataryConfiguration()
+{
+
+  switch (RotataryState)
+  {
+  case 0:
+    astate = digitalRead(RotataryA);
+    if (astate != alaststate)
+    {
+      if (digitalRead(RotataryB) != astate)
+      {
+        MoverMotorRPM ++;
+      }
+      else
+      {
+        MoverMotorRPM --;
+      }
+      Serial.print("Mover Motor RPM: ");
+      Serial.print(MoverMotorRPM);
+      Serial.println();
+    }
+    alaststate = astate;
+    break;
+
+  case 1:
+    astate = digitalRead(RotataryA);
+    if (astate != alaststate)
+    {
+      if (digitalRead(RotataryB) != astate)
+      {
+        FanExhaustMotorRPM ++;
+      }
+      else
+      {
+        FanExhaustMotorRPM --;
+      }
+      Serial.print("Mover Motor RPM: ");
+      Serial.print(MoverMotorRPM);
+      Serial.println();
+    }
+    alaststate = astate;
+  
+  default:
+    break;
+  }
+
+}
+void ShowRpmOnLcd()
+{
+  lcd.setCursor(0,0);
+  lcd.print("M1 RPM: ");
+  lcd.print(MoverMotorRPM);
+  lcd.setCursor(0,1);
+  lcd.print("M2 RPM: ");
+  lcd.print(FanExhaustMotorRPM);
+}
 void SwitchA_control() // ISR for limit A pressed
 {
 
@@ -158,10 +246,10 @@ void DoExhaust()
   ReturnAfterExhaust = false;
 }
 
-void Move_forward() // moving the trolley forward with air blower as well
+void Move_forward()                             // moving the trolley forward with air blower as well
 {
 
-  if (!initialStart)
+  if (!initialStart)                           //  smooth startup
   {
     for (int i = 0; i <= MoverMotorRPM; i++)
     {
@@ -176,15 +264,15 @@ void Move_forward() // moving the trolley forward with air blower as well
 
   else
   {
-    analogWrite(M2_L_Pwm, MoverMotorRPM);
+    analogWrite(M2_L_Pwm, MoverMotorRPM);           //constant speed
     analogWrite(M1_L_Pwm, MoverMotorRPM);
   }
 }
 
 
-void Move_reverse() // moving the trolley in reverse direction with air blower
+void Move_reverse()                               // moving the trolley in reverse direction with air blower
 {
-  if (ReturnAfterExhaust)
+  if (ReturnAfterExhaust)                        // firstly checking to run exhaust 
   {
     delay(5000);
     Serial.println("exhaust fan ruining");
@@ -193,7 +281,7 @@ void Move_reverse() // moving the trolley in reverse direction with air blower
     // analogWrite(M2_R_Pwm, 100);
     // analogWrite(M2_L_Pwm, 0);
     // delay(1000);
-    analogWrite(M2_R_Pwm, 50);
+    analogWrite(M2_R_Pwm, 50);                    // gradually stoping
     analogWrite(M2_L_Pwm, 0);
     delay(1000);
     analogWrite(M2_R_Pwm, 20);
@@ -210,7 +298,7 @@ void Move_reverse() // moving the trolley in reverse direction with air blower
     state = 2;
   }
 
-  else
+  else                                       //and then reverse direction toward parking
   {
 
     if (!initialStart)
@@ -233,16 +321,3 @@ void Move_reverse() // moving the trolley in reverse direction with air blower
     }
   }
 }
-
-// while (digitalRead(switch_button))
-// {
-//   analogWrite(M1_R_Pwm, i);
-//   analogWrite(M1_L_Pwm, 0);
-//   delay(50);
-
-//   i = i + 1;
-
-//   if (i >= 255)
-//   {
-//     i = 0;
-//   }

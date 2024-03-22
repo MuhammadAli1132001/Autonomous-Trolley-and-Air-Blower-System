@@ -16,8 +16,8 @@ pulse width modulation(PWM) is programmatically configured for variable motor sp
 
 int MoverMotorRPM = 0;                   //Mover motor M1 RPM
 int FanExhaustMotorRPM = 0;             // Fan / Exhaust motor M2 RPM
-
 int RotataryState, alaststate, astate, bstate;
+int RotataryStateLastPress = 0;
 
 int rs = A0, e = A1, d1 = A2, d2 = A3, d3 = A4, d4 = A5;
 LiquidCrystal lcd(rs, e, d4, d3, d2, d1);
@@ -39,6 +39,7 @@ uint8_t state = 0;
 uint8_t i = 0;
 
 void Started(void);
+void RotataryConfiguration(void);
 void ShowRpmOnLcd(void);
 void Move_forward(void);
 void Move_reverse(void);
@@ -53,6 +54,7 @@ void setup()
   pinMode(Push_Enable, INPUT);
   pinMode(Limit_switchA, INPUT);
   pinMode(Limit_switchB, INPUT);
+  pinMode(RotatarySwitch, INPUT_PULLUP);
   pinMode(RotataryA, INPUT);
   pinMode(RotataryB, INPUT);
 
@@ -87,16 +89,24 @@ void setup()
 
 void loop()
 {
-  if (digitalRead(RotatarySwitch))
+  if ((!digitalRead(RotatarySwitch) && millis() - RotataryStateLastPress > 0))
   {
-    delay(10);
-    Serial.println("Rotatory switch");
+    Serial.println("Rotatory switch pressed");
     RotataryState ++;
     if (RotataryState > 2)
     {
       RotataryState = 0;
+      Serial.println("Not changing state");
+      lcd.setCursor(12,1);
+      lcd.print("  ");
+      lcd.setCursor(12,0);
+      lcd.print("  ");
     }
+    RotataryStateLastPress = millis();
+    delay(1);
   }
+  delay(5);
+
   RotataryConfiguration();
   // switch (state)
   // {
@@ -138,17 +148,21 @@ void RotataryConfiguration()
 
   switch (RotataryState)
   {
-  case 0:
+  case 1:
+    lcd.setCursor(12,1);
+    lcd.print("  ");
+    lcd.setCursor(12,0);
+    lcd.print("<-");
     astate = digitalRead(RotataryA);
     if (astate != alaststate)
     {
       if (digitalRead(RotataryB) != astate)
       {
-        MoverMotorRPM ++;
+        MoverMotorRPM = MoverMotorRPM + 1;
       }
       else
       {
-        MoverMotorRPM --;
+        MoverMotorRPM = MoverMotorRPM - 1;
       }
       Serial.print("Mover Motor RPM: ");
       Serial.print(MoverMotorRPM);
@@ -157,19 +171,23 @@ void RotataryConfiguration()
     alaststate = astate;
     break;
 
-  case 1:
+  case 2:
+    lcd.setCursor(12,0);
+    lcd.print("  ");
+    lcd.setCursor(12,1);
+    lcd.print("<-");
     astate = digitalRead(RotataryA);
     if (astate != alaststate)
     {
       if (digitalRead(RotataryB) != astate)
       {
-        FanExhaustMotorRPM ++;
+        FanExhaustMotorRPM = FanExhaustMotorRPM + 1;
       }
       else
       {
-        FanExhaustMotorRPM --;
+        FanExhaustMotorRPM = FanExhaustMotorRPM - 1;
       }
-      Serial.print("Mover Motor RPM: ");
+      Serial.print("Fan/Exhaust Motor RPM: ");
       Serial.print(MoverMotorRPM);
       Serial.println();
     }

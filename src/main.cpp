@@ -132,7 +132,7 @@ void Started()
 {
   if (!digitalRead(Push_Enable) && state == 0)
   {
-    MoverMotorRPM = 120;
+    MoverMotorRPM = 130;
     FanExhaustMotorRPM = 120;
     Serial.println("Enabled button is Pressed");
     state = 1;
@@ -148,22 +148,27 @@ void RotataryConfiguration()
   switch (RotataryState)
   {
   case 1:
-    lcd.setCursor(13, 1);
-    lcd.print("   ");
+
     lcd.setCursor(12, 0);
-    lcd.print(" <-");
+    lcd.print("<-");
+    lcd.setCursor(12, 1);                     //M1 RPM changing indicator
+    lcd.print("  ");
 
     if (astate != alaststate)                  //mover M1 RPM changing
     {
       if (digitalRead(RotataryB) != astate)
       {
+        if (MoverMotorRPM < 255){
         MoverMotorRPM++;
         Serial.println("clockwise ");
+        }
       }
       else
       {
+        if (MoverMotorRPM > 0){
         MoverMotorRPM--;
         Serial.println("anti-clockwise");
+        }
       }
       Serial.print("Mover Motor RPM: ");
       Serial.print(MoverMotorRPM);
@@ -173,44 +178,53 @@ void RotataryConfiguration()
     break;
 
   case 2:
-    lcd.setCursor(13, 0);
-    lcd.print("  ");
+
     lcd.setCursor(12, 1);
-    lcd.print(" <-");
+    lcd.print("<-");
+    lcd.setCursor(12, 0);                   //M2 changing indicator
+    lcd.print("  ");
+
     if (astate != alaststate)                //fan/exhaust M2 RPM changing
     {
       if (digitalRead(RotataryB) != astate)
       {
+        if (FanExhaustMotorRPM < 255){
         FanExhaustMotorRPM++;
         Serial.println("clockwise ");
+       }
       }
       else
       {
+        if (FanExhaustMotorRPM > 0){
         FanExhaustMotorRPM--;
         Serial.println("anti-clockwise ");
+        }
       }
       Serial.print("Fan/Exhaust Motor RPM: ");
-      Serial.print(MoverMotorRPM);
+      Serial.print(FanExhaustMotorRPM);
       Serial.println();
     }
     alaststate = astate;
     break;
-
+    
   default:
-    break;
+  break;
   }
 }
 void ShowRpmOnLcd()
 {
+  int m1_rpm = ((200) * ((MoverMotorRPM)*0.0039));
+  int m2_rpm = ((200) * ((FanExhaustMotorRPM)*0.0039));
+
   lcd.setCursor(0, 0);
   lcd.print("M1 RPM: ");
-  lcd.print(MoverMotorRPM);
-  lcd.print("  ");
+  lcd.print(m1_rpm);
+  lcd.print(" ");
 
   lcd.setCursor(0, 1);
   lcd.print("M2 RPM: ");
-  lcd.print(FanExhaustMotorRPM);
-  lcd.print("  ");
+  lcd.print(m2_rpm);
+  lcd.print(" ");
 }
 void SwitchA_control() // ISR for limit A pressed
 {
@@ -287,7 +301,7 @@ void Move_forward() // moving the trolley forward with air blower as well
 
   else
   {
-    analogWrite(M2_L_Pwm, MoverMotorRPM); // constant speed
+    analogWrite(M2_L_Pwm, FanExhaustMotorRPM); // constant speed
     analogWrite(M1_L_Pwm, MoverMotorRPM);
   }
 }
@@ -339,7 +353,7 @@ void Move_reverse() // moving the trolley in reverse direction with air blower
     else
     {
       analogWrite(M1_R_Pwm, MoverMotorRPM);
-      analogWrite(M2_R_Pwm, MoverMotorRPM);
+      analogWrite(M2_R_Pwm, FanExhaustMotorRPM);
     }
   }
 }

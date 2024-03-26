@@ -107,6 +107,10 @@ void loop()
   delay(10);
 
   RotataryConfiguration();
+  Started();
+  Serial.print("In state ");
+  Serial.println(state);
+  ShowRpmOnLcd();
   switch (state)
   {
   case 1:
@@ -121,11 +125,6 @@ void loop()
     Stop();
     break;
   }
-
-  Started();
-  Serial.print("In state ");
-  Serial.println(state);
-  ShowRpmOnLcd();
 }
 
 void Started()
@@ -213,8 +212,8 @@ void RotataryConfiguration()
 }
 void ShowRpmOnLcd()
 {
-  int m1_rpm = ((200) * ((MoverMotorRPM)*0.0039));
-  int m2_rpm = ((200) * ((FanExhaustMotorRPM)*0.0039));
+  int m1_rpm = ((120) * ((MoverMotorRPM)*0.0039));
+  int m2_rpm = ((70) * ((FanExhaustMotorRPM)*0.0039));
 
   lcd.setCursor(0, 0);
   lcd.print("M1 RPM: ");
@@ -331,6 +330,8 @@ void Move_reverse() // moving the trolley in reverse direction with air blower
     delay(5000);
     ReturnAfterExhaust = false;
     initialStart = false;
+    lcd.clear();
+
     // state = 2;
   }
 

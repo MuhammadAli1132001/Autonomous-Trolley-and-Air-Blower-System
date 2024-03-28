@@ -213,7 +213,7 @@ void RotataryConfiguration()
 void ShowRpmOnLcd()
 {
   int m1_rpm = ((120) * ((MoverMotorRPM)*0.0039));
-  int m2_rpm = ((70) * ((FanExhaustMotorRPM)*0.0039));
+  int m2_rpm = ((60) * ((FanExhaustMotorRPM)*0.0039));
 
   lcd.setCursor(0, 0);
   lcd.print("M1 RPM: ");
@@ -279,6 +279,7 @@ void DoExhaust()
     delays = delays + 1;
     Serial.println(delays);
   }
+  // lcd.clear();
   ReturnAfterExhaust = false;
 }
 

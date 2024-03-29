@@ -331,7 +331,7 @@ void Move_reverse() // moving the trolley in reverse direction with air blower
     delay(5000);
     ReturnAfterExhaust = false;
     initialStart = false;
-    lcd.clear();
+    // lcd.clear();
 
     // state = 2;
   }

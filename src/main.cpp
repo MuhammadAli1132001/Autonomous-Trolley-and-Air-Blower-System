@@ -213,7 +213,7 @@ void RotataryConfiguration()
 void ShowRpmOnLcd()
 {
   int m1_rpm = ((120) * ((MoverMotorRPM)*0.0039));
-  int m2_rpm = ((60) * ((FanExhaustMotorRPM)*0.0039));
+  int m2_rpm = ((90) * ((FanExhaustMotorRPM)*0.0039));
 
   lcd.setCursor(0, 0);
   lcd.print("M1 RPM: ");
@@ -271,10 +271,17 @@ void DoExhaust()
 {
   int delays = 0;
 
+  for (int i = 0; i<200; i++)
+  {
+    analogWrite(M2_L_Pwm,0);
+    analogWrite(M2_R_Pwm,i);
+    delay(20);
+  }
+  
   while (delays != 1000) // moving M2 with full speed in opposite direction for Exhaust, upto 10 seconds
   {
     analogWrite(M2_L_Pwm, 0);
-    analogWrite(M2_R_Pwm, FanExhaustMotorRPM);
+    analogWrite(M2_R_Pwm, 200);
     delay(10);
     delays = delays + 1;
     Serial.println(delays);
@@ -314,9 +321,7 @@ void Move_reverse() // moving the trolley in reverse direction with air blower
     Serial.println("exhaust fan ruining");
     DoExhaust();
     Serial.println("Stopping after exhaust upto 5 second");
-    // analogWrite(M2_R_Pwm, 100);
-    // analogWrite(M2_L_Pwm, 0);
-    // delay(1000);
+
     analogWrite(M2_R_Pwm, 50); // gradually stoping
     analogWrite(M2_L_Pwm, 0);
     delay(1000);

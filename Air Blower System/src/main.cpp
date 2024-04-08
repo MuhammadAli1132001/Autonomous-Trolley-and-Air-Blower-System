@@ -228,7 +228,7 @@ void ShowRpmOnLcd()
 void SwitchA_control() // ISR for limit A pressed
 {
 
-  Serial.println("limit switch A Pressed");
+  Serial.println("limit switch-A Pressed");
 
   analogWrite(M1_R_Pwm, 0);
   analogWrite(M1_L_Pwm, 0);

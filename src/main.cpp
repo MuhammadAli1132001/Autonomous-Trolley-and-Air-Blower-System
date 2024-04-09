@@ -212,7 +212,7 @@ void RotataryConfiguration()
 }
 void ShowRpmOnLcd()
 {
-  int m1_rpm = ((120) * ((MoverMotorRPM)*0.0039));
+  int m1_rpm = ((110) * ((MoverMotorRPM)*0.0039));
   int m2_rpm = ((90) * ((FanExhaustMotorRPM)*0.0039));
 
   lcd.setCursor(0, 0);

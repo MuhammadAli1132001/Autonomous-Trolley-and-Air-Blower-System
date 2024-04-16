@@ -131,7 +131,7 @@ void Started()
 {
   if (!digitalRead(Push_Enable) && state == 0)
   {
-    MoverMotorRPM = 135;
+    MoverMotorRPM = 140;
     FanExhaustMotorRPM = 110;
     Serial.println("Enabled button is Pressed");
     state = 1;
